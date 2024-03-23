@@ -1,17 +1,12 @@
 package mssql_test
 
-/*
-запуск тестов
-go test -v -cover ./tests/mssql
-
-*/
-
 import (
 	"database/sql"
-	"dbwrap"
 	"fmt"
 	"testing"
 	"time"
+
+	"github.com/mpuzanov/dbwrap"
 
 	_ "github.com/denisenkom/go-mssqldb"
 

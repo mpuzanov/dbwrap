@@ -1,16 +1,12 @@
 package postgres_test
 
-/*
-go get github.com/lib/pq
-
-*/
-
 import (
 	"database/sql"
-	"dbwrap"
 	"fmt"
 	"testing"
 	"time"
+
+	"github.com/mpuzanov/dbwrap"
 
 	_ "github.com/lib/pq"
 

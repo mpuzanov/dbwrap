@@ -1,16 +1,12 @@
 package mysql_test
 
-/*
-go get -u github.com/go-sql-driver/mysql
-
-*/
-
 import (
 	"database/sql"
-	"dbwrap"
 	"fmt"
 	"testing"
 	"time"
+
+	"github.com/mpuzanov/dbwrap"
 
 	_ "github.com/go-sql-driver/mysql"
 

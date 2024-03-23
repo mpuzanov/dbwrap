@@ -1,4 +1,4 @@
-module dbwrap
+module github.com/mpuzanov/dbwrap
 
 go 1.22.1
 

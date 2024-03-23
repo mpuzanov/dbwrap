@@ -1,7 +1,7 @@
 package mssql_test
 
 import (
-	"dbwrap"
+	"github.com/mpuzanov/dbwrap"
 	"testing"
 
 	"github.com/stretchr/testify/assert"

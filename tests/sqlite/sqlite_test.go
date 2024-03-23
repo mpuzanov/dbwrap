@@ -1,16 +1,12 @@
 package sqlite_test
 
-/*
-go get github.com/mattn/go-sqlite3
-
-*/
-
 import (
 	"database/sql"
-	"dbwrap"
 	"fmt"
 	"testing"
 	"time"
+
+	"github.com/mpuzanov/dbwrap"
 
 	_ "github.com/mattn/go-sqlite3"
 
