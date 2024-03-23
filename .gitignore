@@ -1,0 +1,24 @@
+/.idea
+/.vscode
+/bin
+/files
+/logs
+
+*.exe
+*.exe~
+*.dll
+*.so
+*.log
+*.env*
+*.out
+*.tmp
+*.zip
+*.xls
+*.xlsx
+config*.yml
+
+*.code-workspace
+go.sum
+
+# запускаемый файл
+kvart-info

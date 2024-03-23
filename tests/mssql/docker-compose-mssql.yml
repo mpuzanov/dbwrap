@@ -1,0 +1,23 @@
+version: '3.7'
+
+services:
+  sqlserver:
+    container_name: sqlserver-test
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_PID=Developer
+      - SA_PASSWORD=Password123
+      - MSSQL_COLLATION=SQL_Latin1_General_CP1251_CI_AS
+    volumes:
+      - testdbdata:/var/opt/mssql
+    ports:
+      - '1401:1433'
+    healthcheck:
+      test: '/opt/mssql-tools/bin/sqlcmd -U sa -P Password123 -Q "SELECT \"ready\"" | grep "ready"'
+      timeout: 20s
+      interval: 10s
+      retries: 10
+
+volumes:
+  testdbdata:
