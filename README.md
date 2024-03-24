@@ -1,6 +1,41 @@
 # Обёртка для SQLX
 
+Добавлены методы:
+
+```golang
+Exec(query string, args ...interface{}) (int64, error)
+NamedExec(query string, arg interface{}) (int64, error)
+Select(dest interface{}, query string, args ...interface{}) error
+NamedSelect(dest interface{}, query string, arg interface{}) error
+SelectMaps(query string, args ...interface{}) (ret []map[string]interface{}, err error)
+NamedSelectMaps(query string, arg interface{}) (ret []map[string]interface{}, err error)
+Get(dest interface{}, query string, args ...interface{}) error
+NamedGet(dest interface{}, query string, arg interface{}) error
+GetMap(query string, args ...interface{}) (ret map[string]interface{}, err error)
+NamedGetMap(query string, arg interface{}) (ret map[string]interface{}, err error)
+```
+
 Протестировано для MSSQL, PostgreSQL, MySQL, SQLite
+
+Установка `go get github.com/mpuzanov/dbwrap`
+
+## Примеры
+
+```golang
+
+    config := dbwrap.NewConfig("sqlserver").WithPassword(password).WithDB("master").WithPort(port)
+    db, err := dbwrap.NewConnect(config)
+    if err != nil {
+        panic(err)
+    }
+    log.Println("cfg.DB", config.String())
+
+
+    query := fmt.Sprintf(`select last_name, email, created_at from %s where last_name=:Name`, tableName)
+    person := Person{}
+    err = db.NamedGet(&person, query, map[string]interface{}{"Name": "Иванов"})
+```
+
 
 ## Драйвера БД
 
@@ -20,17 +55,4 @@
 
 >go get github.com/mattn/go-sqlite3
 
-## Запуск докер-контейнеров
 
-```bash
-docker run -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=Password123" -e "MSSQL_COLLATION=SQL_Latin1_General_CP1251_CI_AS" -p 1401:1433 --name sqlserver-test -d mcr.microsoft.com/mssql/server:2022-latest
-
-docker container ls
-
-docker container exec -it sqlserver-test bash
-$ /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P Password123
-$ exit
-
-docker stop sqlserver-test
-
-```
