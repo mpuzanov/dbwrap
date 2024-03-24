@@ -43,7 +43,7 @@ func (ts *TestDBSuite) SetupSuite() {
 
 	config := dbwrap.NewConfig("sqlite3")
 	//ts.T().Log(config, config.GetDatabaseURL())
-	db, err := dbwrap.New(config)
+	db, err := dbwrap.NewConnect(config)
 	if err != nil {
 		ts.T().Fatalf("cannot connect db: %v", err)
 	}
@@ -59,7 +59,7 @@ func (ts *TestDBSuite) TearDownSuite() {
 func setupDatabase(ts *TestDBSuite) {
 	ts.T().Log("setting up database")
 	//==================================================================
-	db, err := dbwrap.New(ts.cfg.WithDB(dbName))
+	db, err := dbwrap.NewConnect(ts.cfg.WithDB(dbName))
 	if err != nil {
 		ts.FailNowf("cannot connect db:", "[%s] %s", dbName, err.Error())
 	}

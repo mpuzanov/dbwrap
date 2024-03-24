@@ -42,7 +42,7 @@ func TestTestDBSuite(t *testing.T) {
 func (ts *TestDBSuite) SetupSuite() {
 
 	config := dbwrap.NewConfig("postgres").WithPassword("Password123")
-	db, err := dbwrap.New(config)
+	db, err := dbwrap.NewConnect(config)
 	if err != nil {
 		ts.T().Fatalf("cannot connect db: %v", err)
 	}
@@ -70,7 +70,7 @@ func setupDatabase(ts *TestDBSuite) {
 	}
 	ts.T().Logf("База [%s] создана\n", dbName)
 	//==================================================================
-	db, err := dbwrap.New(ts.cfg.WithDB(dbName))
+	db, err := dbwrap.NewConnect(ts.cfg.WithDB(dbName))
 	if err != nil {
 		ts.FailNowf("cannot connect db:", "[%s] %s", dbName, err.Error())
 	}
@@ -109,7 +109,7 @@ func tearDownDatabase(ts *TestDBSuite) {
 		ts.FailNowf("unable to close database", err.Error())
 	}
 
-	db, err := dbwrap.New(ts.cfg.WithDB("postgres"))
+	db, err := dbwrap.NewConnect(ts.cfg.WithDB("postgres"))
 	if err != nil {
 		t.Fatalf("cannot connect db: %v", err)
 	}

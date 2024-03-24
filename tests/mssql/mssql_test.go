@@ -10,6 +10,7 @@ import (
 
 	_ "github.com/denisenkom/go-mssqldb"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -23,16 +24,36 @@ type Person struct {
 	CreatedAt   time.Time  `faker:"-" db:"created_at"`
 }
 
+var (
+	dbName    = "db_test"
+	tableName = fmt.Sprintf("%s.dbo.people", dbName)
+	password  = "Password123"
+	port      = 1401
+)
+
 // DBSuite структура для набора тестов с БД
 type TestDBSuite struct {
 	suite.Suite
 	db *dbwrap.DBSQL // коннект к БД master
 }
 
-var (
-	dbName    = "db_test"
-	tableName = fmt.Sprintf("%s.dbo.people", dbName)
-)
+func TestDBNewConnect(t *testing.T) {
+	config := dbwrap.NewConfig("sqlserver").WithDB("").WithPort(port)
+
+	_, err := dbwrap.NewConnect(config)
+	assert.ErrorIs(t, err, dbwrap.ErrBadConfigDB)
+
+	config.WithPassword("12345").WithDB("master")
+	_, err = dbwrap.NewConnect(config)
+	assert.ErrorContains(t, err, "sqlx.Connect")
+
+	config.WithPassword(password)
+	db, err := dbwrap.NewConnect(config)
+	assert.NoError(t, err)
+
+	db.SetTimeout(100)
+	assert.Equal(t, 100, db.Cfg.TimeoutQuery)
+}
 
 func TestTestDBSuite(t *testing.T) {
 	suite.Run(t, &TestDBSuite{})
@@ -40,8 +61,8 @@ func TestTestDBSuite(t *testing.T) {
 
 func (ts *TestDBSuite) SetupSuite() {
 
-	config := dbwrap.NewConfig("sqlserver").WithPassword("Password123").WithDB("master").WithPort(1401)
-	db, err := dbwrap.New(config)
+	config := dbwrap.NewConfig("sqlserver").WithPassword(password).WithDB("master").WithPort(port)
+	db, err := dbwrap.NewConnect(config)
 	if err != nil {
 		ts.T().Fatalf("cannot connect db : %v", err)
 	}
