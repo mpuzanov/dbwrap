@@ -17,8 +17,8 @@ type DBSQL struct {
 // ErrBadConfigDB ошибка
 var ErrBadConfigDB = errors.New("не заполнены параметры подключения к БД")
 
-// New Создание подключения к БД
-func New(cfg *Config) (*DBSQL, error) {
+// NewConnect Создание подключения к БД
+func NewConnect(cfg *Config) (*DBSQL, error) {
 
 	if cfg.DriverName != "sqlite3" && (cfg.Host == "" || cfg.Database == "" || cfg.User == "") {
 		return nil, ErrBadConfigDB
@@ -31,12 +31,12 @@ func New(cfg *Config) (*DBSQL, error) {
 	return &DBSQL{DBX: db, Cfg: cfg}, nil
 }
 
-// Close -.
+// Close закрытие соединений
 func (d *DBSQL) Close() error {
 	return d.DBX.Close()
 }
 
-// SetTimeout установка таймаута для выполнения запроса
+// SetTimeout установка таймаута для выполнения запроса в секундах
 func (d *DBSQL) SetTimeout(timeout uint) {
 	d.Cfg.TimeoutQuery = int(timeout)
 }

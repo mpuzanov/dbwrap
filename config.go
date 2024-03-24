@@ -5,7 +5,7 @@ import (
 	"net/url"
 )
 
-// Config .
+// Config структура для параметров соединения с БД
 type Config struct {
 	Host         string `yaml:"host" env:"DB_HOST" env-required:"true"`
 	Port         int    `yaml:"port" env:"DB_PORT" env-default:"1433" env-description:"sql server port"`
@@ -69,6 +69,7 @@ func (c *Config) WithDB(dbname string) *Config {
 // "sqlserver://user:password@host:port?database=database_name"
 // "postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable"
 // "mysql://username:password@protocol(address)/dbname?param=value"  "user:password@tcp(127.0.0.1:3306)/sql_test?charset=utf8mb4&parseTime=True"
+// sqlite3 или имя БД или :memory:
 // driver sqlserver || postgres
 func (c *Config) GetDatabaseURL() string {
 	switch c.DriverName {
@@ -102,7 +103,7 @@ func (c *Config) GetDatabaseURL() string {
 	}
 }
 
-// String выводо полей в строку
+// String вывод полей в строку
 func (c *Config) String() string {
 	return fmt.Sprintf("DriverName=%s, Host=%s, Port=%d, User=%s, Password=<REMOVED>, Database=%s, TimeoutQuery=%d",
 		c.DriverName, c.Host, c.Port, c.User, c.Database, c.TimeoutQuery)
