@@ -121,6 +121,7 @@ func (d *DBSQL) SelectMaps(query string, args ...interface{}) (ret []map[string]
 			case []byte:
 				if resFloat, err := strconv.ParseFloat(string(v), 64); err == nil {
 					m[key] = resFloat
+					continue
 				}
 				if v, ok := val.([]uint8); ok {
 					m[key] = string(v)
@@ -200,6 +201,7 @@ func (d *DBSQL) GetMap(query string, args ...interface{}) (ret map[string]interf
 		case []byte:
 			if resFloat, err := strconv.ParseFloat(string(v), 64); err == nil {
 				ret[key] = resFloat
+				continue
 			}
 			if v, ok := val.([]uint8); ok {
 				ret[key] = string(v)

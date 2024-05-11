@@ -20,5 +20,3 @@ config*.yml
 *.code-workspace
 go.sum
 
-# запускаемый файл
-kvart-info
