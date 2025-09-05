@@ -8,7 +8,7 @@ import (
 
 	"github.com/mpuzanov/dbwrap"
 
-	_ "github.com/denisenkom/go-mssqldb"
+	_ "github.com/microsoft/go-mssqldb"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"

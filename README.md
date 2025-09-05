@@ -45,7 +45,7 @@ NamedGetMap(query string, arg interface{}) (ret map[string]interface{}, err erro
 
 Для MSSQL Server:
 
->go get github.com/denisenkom/go-mssqldb
+>go get github.com/microsoft/go-mssqldb
 
 Для MySQL:
 
