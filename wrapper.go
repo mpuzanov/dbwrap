@@ -10,11 +10,11 @@ import (
 	"go.uber.org/multierr"
 )
 
-func sqlErr(err error, query string, args ...interface{}) error {
+func sqlErr(err error, query string, args ...any) error {
 	return fmt.Errorf(`run query "%s" with args %+v: %w`, query, args, err)
 }
 
-func namedQuery(query string, arg interface{}) (nq string, args []interface{}, err error) {
+func namedQuery(query string, arg any) (nq string, args []any, err error) {
 	nq, args, err = sqlx.Named(query, arg)
 	if err != nil {
 		return "", nil, sqlErr(err, query, args...)
@@ -22,12 +22,12 @@ func namedQuery(query string, arg interface{}) (nq string, args []interface{}, e
 	return nq, args, nil
 }
 
-// Exec Выполнение запроса DML
-func (d *DBSQL) Exec(query string, args ...interface{}) (int64, error) {
+// ExecContext Выполнение запроса DML.
+func (d *DBSQL) ExecContext(ctx context.Context, query string, args ...any) (int64, error) {
 
-	// ограничим время выполнения запроса
+	// ограничим время выполнения запроса по умолчанию
 	dur := time.Duration(d.Cfg.TimeoutQuery) * time.Second
-	ctx, cancel := context.WithTimeout(context.Background(), dur)
+	ctx, cancel := context.WithTimeout(ctx, dur)
 	defer cancel()
 
 	result, err := d.DBX.ExecContext(ctx, query, args...)
@@ -41,27 +41,27 @@ func (d *DBSQL) Exec(query string, args ...interface{}) (int64, error) {
 	return count, nil
 }
 
-// NamedExec Выполнение запроса DML
-func (d *DBSQL) NamedExec(query string, arg interface{}) (int64, error) {
+// NamedExecContext Выполнение запроса DML.
+func (d *DBSQL) NamedExecContext(ctx context.Context, query string, arg any) (int64, error) {
 
 	nq, args, err := namedQuery(query, arg)
 	if err != nil {
 		return 0, err
 	}
 
-	return d.Exec(d.DBX.Rebind(nq), args...)
+	return d.ExecContext(ctx, d.DBX.Rebind(nq), args...)
 }
 
-// Select получаем данные из запроса в слайс структур
+// SelectContext получаем данные из запроса в слайс структур.
 //
 // var users []User
 //
-// err := ts.db.Select(&users, "select * from users")
-func (d *DBSQL) Select(dest interface{}, query string, args ...interface{}) error {
+// err := ts.db.Select(ctx, &users, "select * from users")
+func (d *DBSQL) SelectContext(ctx context.Context, dest any, query string, args ...any) error {
 
-	// ограничим время выполнения запроса
+	// ограничим время выполнения запроса по умолчанию
 	dur := time.Duration(d.Cfg.TimeoutQuery) * time.Second
-	ctx, cancel := context.WithTimeout(context.Background(), dur)
+	ctx, cancel := context.WithTimeout(ctx, dur)
 	defer cancel()
 
 	if err := sqlx.SelectContext(ctx, d.DBX, dest, query, args...); err != nil {
@@ -71,26 +71,26 @@ func (d *DBSQL) Select(dest interface{}, query string, args ...interface{}) erro
 	return nil
 }
 
-// NamedSelect получаем данные из запроса в слайс структур
+// NamedSelectContext получаем данные из запроса в слайс структур
 //
 // var users []User
 //
-// err := ts.db.NamedSelect(&users, "select * from users where name=:Name", map[string]interface{}{"Name": "admin"})
-func (d *DBSQL) NamedSelect(dest interface{}, query string, arg interface{}) error {
+// err := ts.db.NamedSelectContext(ctx, &users, "select * from users where name=:Name", map[string]any{"Name": "admin"})
+func (d *DBSQL) NamedSelectContext(ctx context.Context, dest any, query string, arg any) error {
 
 	nq, args, err := namedQuery(query, arg)
 	if err != nil {
 		return err
 	}
 
-	return d.Select(dest, d.DBX.Rebind(nq), args...)
+	return d.SelectContext(ctx, dest, d.DBX.Rebind(nq), args...)
 }
 
-// SelectMaps ...
-func (d *DBSQL) SelectMaps(query string, args ...interface{}) (ret []map[string]interface{}, err error) {
+// SelectMapsContext ...
+func (d *DBSQL) SelectMapsContext(ctx context.Context, query string, args ...any) (ret []map[string]any, err error) {
 
 	dur := time.Duration(d.Cfg.TimeoutQuery) * time.Second
-	ctx, cancel := context.WithTimeout(context.Background(), dur)
+	ctx, cancel := context.WithTimeout(ctx, dur)
 	defer cancel()
 
 	rows, err := d.DBX.QueryxContext(ctx, query, args...)
@@ -102,14 +102,14 @@ func (d *DBSQL) SelectMaps(query string, args ...interface{}) (ret []map[string]
 		err = multierr.Combine(err, rows.Close())
 	}()
 
-	ret = []map[string]interface{}{}
+	ret = []map[string]any{}
 	numCols := -1
 	for rows.Next() {
-		var m map[string]interface{}
+		var m map[string]any
 		if numCols < 0 {
-			m = map[string]interface{}{}
+			m = map[string]any{}
 		} else {
-			m = make(map[string]interface{}, numCols)
+			m = make(map[string]any, numCols)
 		}
 
 		if err = rows.MapScan(m); err != nil {
@@ -144,22 +144,22 @@ func (d *DBSQL) SelectMaps(query string, args ...interface{}) (ret []map[string]
 	return ret, nil
 }
 
-// NamedSelectMaps ...
-func (d *DBSQL) NamedSelectMaps(query string, arg interface{}) (ret []map[string]interface{}, err error) {
+// NamedSelectMapsContext ...
+func (d *DBSQL) NamedSelectMapsContext(ctx context.Context, query string, arg any) (ret []map[string]any, err error) {
 	nq, args, err := namedQuery(query, arg)
 	if err != nil {
 		return nil, err
 	}
 
-	return d.SelectMaps(d.DBX.Rebind(nq), args...)
+	return d.SelectMapsContext(ctx, d.DBX.Rebind(nq), args...)
 }
 
-// Get ...
-func (d *DBSQL) Get(dest interface{}, query string, args ...interface{}) error {
+// GetContext ...
+func (d *DBSQL) GetContext(ctx context.Context, dest any, query string, args ...any) error {
 
-	// ограничим время выполнения запроса
+	// ограничим время выполнения запроса по умолчанию
 	dur := time.Duration(d.Cfg.TimeoutQuery) * time.Second
-	ctx, cancel := context.WithTimeout(context.Background(), dur)
+	ctx, cancel := context.WithTimeout(ctx, dur)
 	defer cancel()
 
 	if err := sqlx.GetContext(ctx, d.DBX, dest, query, args...); err != nil {
@@ -169,21 +169,21 @@ func (d *DBSQL) Get(dest interface{}, query string, args ...interface{}) error {
 	return nil
 }
 
-// NamedGet ...
-func (d *DBSQL) NamedGet(dest interface{}, query string, arg interface{}) error {
+// NamedGetContext ...
+func (d *DBSQL) NamedGetContext(ctx context.Context, dest any, query string, arg any) error {
 	nq, args, err := namedQuery(query, arg)
 	if err != nil {
 		return err
 	}
 
-	return d.Get(dest, d.DBX.Rebind(nq), args...)
+	return d.GetContext(ctx, dest, d.DBX.Rebind(nq), args...)
 }
 
-// GetMap ...
-func (d *DBSQL) GetMap(query string, args ...interface{}) (ret map[string]interface{}, err error) {
-	// ограничим время выполнения запроса
+// GetMapContext ...
+func (d *DBSQL) GetMapContext(ctx context.Context, query string, args ...any) (ret map[string]any, err error) {
+	// ограничим время выполнения запроса по умолчанию
 	dur := time.Duration(d.Cfg.TimeoutQuery) * time.Second
-	ctx, cancel := context.WithTimeout(context.Background(), dur)
+	ctx, cancel := context.WithTimeout(ctx, dur)
 	defer cancel()
 
 	row := d.DBX.QueryRowxContext(ctx, query, args...)
@@ -191,7 +191,7 @@ func (d *DBSQL) GetMap(query string, args ...interface{}) (ret map[string]interf
 		return nil, sqlErr(row.Err(), query, args...)
 	}
 
-	ret = map[string]interface{}{}
+	ret = map[string]any{}
 	if err := row.MapScan(ret); err != nil {
 		return nil, sqlErr(err, query, args...)
 	}
@@ -216,12 +216,12 @@ func (d *DBSQL) GetMap(query string, args ...interface{}) (ret map[string]interf
 	return ret, nil
 }
 
-// NamedGetMap ...
-func (d *DBSQL) NamedGetMap(query string, arg interface{}) (ret map[string]interface{}, err error) {
+// NamedGetMapContext ...
+func (d *DBSQL) NamedGetMapContext(ctx context.Context, query string, arg any) (ret map[string]any, err error) {
 	nq, args, err := namedQuery(query, arg)
 	if err != nil {
 		return nil, err
 	}
 
-	return d.GetMap(d.DBX.Rebind(nq), args...)
+	return d.GetMapContext(ctx, d.DBX.Rebind(nq), args...)
 }

@@ -1,6 +1,7 @@
 package postgres_test
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"testing"
@@ -31,8 +32,9 @@ type TestDBSuite struct {
 }
 
 var (
-	dbName    = "db_test"
-	tableName = fmt.Sprintf("%s.public.people", dbName)
+	dbName        = "db_test"
+	tableName     = fmt.Sprintf("%s.public.people", dbName)
+	ctxDefault, _ = context.WithTimeout(context.Background(), 5*time.Second)
 )
 
 func TestTestDBSuite(t *testing.T) {
@@ -59,12 +61,12 @@ func setupDatabase(ts *TestDBSuite) {
 	ts.T().Log("setting up database")
 	//==================================================================
 	query := fmt.Sprintf(`DROP DATABASE IF EXISTS %s;`, dbName)
-	_, err := ts.db.DBX.Exec(query)
+	_, err := ts.db.DBX.ExecContext(ctxDefault, query)
 	if err != nil {
 		ts.FailNowf("unable to drop database", "[%s] %s", query, err.Error())
 	}
 	query = fmt.Sprintf(`CREATE DATABASE %s;`, dbName)
-	_, err = ts.db.DBX.Exec(query)
+	_, err = ts.db.DBX.ExecContext(ctxDefault, query)
 	if err != nil {
 		ts.FailNowf("unable to create database", "[%s] %s", query, err.Error())
 	}
@@ -86,7 +88,7 @@ func setupDatabase(ts *TestDBSuite) {
 		created_at timestamp NOT NULL DEFAULT now()
 	);`, tableName)
 
-	_, err = ts.db.DBX.Exec(query)
+	_, err = ts.db.DBX.ExecContext(ctxDefault, query)
 	if err != nil {
 		ts.FailNowf("unable to create table", "[%s] %s", tableName, err.Error())
 	}
@@ -98,7 +100,7 @@ func tearDownDatabase(ts *TestDBSuite) {
 	t := ts.T()
 	t.Log("tearing down database")
 
-	_, err := ts.db.DBX.Exec(fmt.Sprintf(`DROP TABLE %s`, tableName))
+	_, err := ts.db.DBX.ExecContext(ctxDefault, fmt.Sprintf(`DROP TABLE %s`, tableName))
 	if err != nil {
 		ts.FailNowf("unable to drop table", err.Error())
 	}
@@ -116,7 +118,7 @@ func tearDownDatabase(ts *TestDBSuite) {
 	ts.db = db
 	t.Log("connected database:", "postgres")
 
-	_, err = ts.db.DBX.Exec(fmt.Sprintf(`DROP DATABASE IF EXISTS %s`, dbName))
+	_, err = ts.db.DBX.ExecContext(ctxDefault, fmt.Sprintf(`DROP DATABASE IF EXISTS %s`, dbName))
 	if err != nil {
 		ts.FailNowf("unable to drop database", err.Error())
 	}
@@ -125,7 +127,7 @@ func tearDownDatabase(ts *TestDBSuite) {
 
 func (ts *TestDBSuite) TestData1() {
 
-	dataInsert := map[string]interface{}{
+	dataInsert := map[string]any{
 		"LastName": "Иванов",
 		"Email":    "ivan@example.com",
 		//"is_owner_flat": true,
@@ -134,7 +136,7 @@ func (ts *TestDBSuite) TestData1() {
 
 	ts.Suite.Run("insert Test", func() {
 		query := fmt.Sprintf(`INSERT INTO %s (last_name, Email) VALUES (:LastName, :Email)`, tableName)
-		count, err := ts.db.NamedExec(query, dataInsert)
+		count, err := ts.db.NamedExecContext(ctxDefault, query, dataInsert)
 		ts.NoError(err)
 		ts.Equal(int64(1), count)
 	})
@@ -143,7 +145,7 @@ func (ts *TestDBSuite) TestData1() {
 	ts.Suite.Run("select Test", func() {
 		query := fmt.Sprintf(`select * from %s`, tableName)
 		var people []Person
-		err := ts.db.Select(&people, query)
+		err := ts.db.SelectContext(ctxDefault, &people, query)
 		ts.NoError(err)
 		ts.Len(people, 1)
 		ts.Equal("Иванов", people[0].LastName)
@@ -153,7 +155,7 @@ func (ts *TestDBSuite) TestData1() {
 	ts.Suite.Run("select Test where", func() {
 		query := fmt.Sprintf(`select last_name, email, created_at from %s where last_name=:Name`, tableName)
 		var people2 []Person
-		err := ts.db.NamedSelect(&people2, query, map[string]interface{}{"Name": "Иванов"})
+		err := ts.db.NamedSelectContext(ctxDefault, &people2, query, map[string]any{"Name": "Иванов"})
 		ts.NoError(err)
 		ts.Len(people2, 1)
 		ts.Equal("ivan@example.com", people2[0].Email)
@@ -164,7 +166,7 @@ func (ts *TestDBSuite) TestData1() {
 	ts.Suite.Run("Get Test", func() {
 		query := fmt.Sprintf(`select count(*) from %s`, tableName)
 		var count int
-		err := ts.db.Get(&count, query)
+		err := ts.db.GetContext(ctxDefault, &count, query)
 		ts.NoError(err)
 		ts.Equal(1, count)
 		//ts.T().Logf("count: %d", count)
@@ -173,7 +175,7 @@ func (ts *TestDBSuite) TestData1() {
 	ts.Suite.Run("Get Test where", func() {
 		query := fmt.Sprintf(`select last_name, email, created_at from %s where last_name=:Name`, tableName)
 		person := Person{}
-		err := ts.db.NamedGet(&person, query, map[string]interface{}{"Name": "Иванов"})
+		err := ts.db.NamedGetContext(ctxDefault, &person, query, map[string]any{"Name": "Иванов"})
 		ts.NoError(err)
 		ts.Equal("ivan@example.com", person.Email)
 		//ts.T().Logf("person: %+v", person)
@@ -182,7 +184,7 @@ func (ts *TestDBSuite) TestData1() {
 	//===========================================================
 	ts.Suite.Run("Get Map", func() {
 		query := fmt.Sprintf(`select last_name, email, created_at from %s where last_name=:Name`, tableName)
-		person, err := ts.db.NamedGetMap(query, map[string]interface{}{"Name": "Иванов"})
+		person, err := ts.db.NamedGetMapContext(ctxDefault, query, map[string]any{"Name": "Иванов"})
 		ts.NoError(err)
 		ts.Equal("ivan@example.com", person["email"])
 		//ts.T().Logf("person: %+v", person)
@@ -191,12 +193,12 @@ func (ts *TestDBSuite) TestData1() {
 	//===========================================================
 	ts.Suite.Run("update Test", func() {
 		query := fmt.Sprintf(`UPDATE %s SET email=:Email where last_name=:Name`, tableName)
-		dataUpdate := map[string]interface{}{
+		dataUpdate := map[string]any{
 			"Name":  "Иванов",
 			"Email": "email_update@example.com",
 		}
 		//ts.T().Logf("dataUpdate: %+v", dataUpdate)
-		count, err := ts.db.NamedExec(query, dataUpdate)
+		count, err := ts.db.NamedExecContext(ctxDefault, query, dataUpdate)
 		ts.Require().NoError(err)
 		ts.Equal(int64(1), count)
 	})
@@ -204,11 +206,11 @@ func (ts *TestDBSuite) TestData1() {
 	//===========================================================
 	ts.Suite.Run("delete Test", func() {
 		query := fmt.Sprintf(`delete from %s where last_name=:Name`, tableName)
-		dataDelete := map[string]interface{}{
+		dataDelete := map[string]any{
 			"Name": "Иванов",
 		}
 		//ts.T().Logf("dataDelete: %+v", dataDelete)
-		count, err := ts.db.NamedExec(query, dataDelete)
+		count, err := ts.db.NamedExecContext(ctxDefault, query, dataDelete)
 		ts.Require().NoError(err)
 		ts.Equal(int64(1), count, "удалено")
 	})
@@ -217,7 +219,7 @@ func (ts *TestDBSuite) TestData1() {
 func (ts *TestDBSuite) TestDataSelect() {
 
 	// batch insert with maps
-	dtIns := []map[string]interface{}{
+	dtIns := []map[string]any{
 		{"LastName": "Сидоров", "Email": "sidr@example.com", "Birthdate": time.Date(2000, 2, 21, 0, 0, 0, 0, time.UTC)},
 		{"LastName": "Кузнецов", "Email": "kuz@gmail.com", "Birthdate": nil},
 		{"LastName": "Петров", "Email": "peter@example.com", "Birthdate": nil},
@@ -225,26 +227,26 @@ func (ts *TestDBSuite) TestDataSelect() {
 
 	//ts.T().Logf("данные для вставки: %+v", dtIns)
 	query := fmt.Sprintf(`INSERT INTO %s (last_name, Email, Birthdate) VALUES (:LastName, :Email, :Birthdate)`, tableName)
-	_, err := ts.db.NamedExec(query, dtIns)
+	_, err := ts.db.NamedExecContext(ctxDefault, query, dtIns)
 	ts.NoError(err)
 
 	//==================================================
 	query = fmt.Sprintf(`select * from %s`, tableName)
-	resultMap, err := ts.db.SelectMaps(query)
+	resultMap, err := ts.db.SelectMapsContext(ctxDefault, query)
 	ts.NoError(err)
 	ts.Len(resultMap, 3)
 	//ts.T().Logf("получим в map: %+v", resultMap)
 
 	var resultSlice []Person
-	err = ts.db.Select(&resultSlice, query)
+	err = ts.db.SelectContext(ctxDefault, &resultSlice, query)
 	ts.Require().NoError(err)
 	ts.Len(resultSlice, 3)
 	//ts.T().Logf("получим в slice: %+v", resultSlice)
 	//==================================================
 
 	query = fmt.Sprintf(`select * from %s where last_name=:Name`, tableName)
-	p := []map[string]interface{}{{"Name": "Кузнецов"}}
-	resultMap2, err := ts.db.NamedSelectMaps(query, p)
+	p := []map[string]any{{"Name": "Кузнецов"}}
+	resultMap2, err := ts.db.NamedSelectMapsContext(ctxDefault, query, p)
 	ts.NoError(err)
 	ts.Len(resultMap2, 1)
 	//ts.T().Logf("получим в map: %+v", resultMap2)
@@ -255,7 +257,7 @@ func (ts *TestDBSuite) TestEmptyData() {
 	ts.Suite.Run("Get EmptyData", func() {
 		query := fmt.Sprintf(`select last_name, email, created_at from %s where last_name=:Name`, tableName)
 		person := Person{}
-		err := ts.db.NamedGet(&person, query, map[string]interface{}{"Name": "Большунов"})
+		err := ts.db.NamedGetContext(ctxDefault, &person, query, map[string]any{"Name": "Большунов"})
 		ts.ErrorIs(err, sql.ErrNoRows)
 		//ts.T().Logf("person: %+v", person)
 	})

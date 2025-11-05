@@ -7,7 +7,7 @@ services:
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=Password123
-      - POSTGRES_DB=db_test
+      - POSTGRES_DB=db_test      
     volumes:
       - testdbdata:/var/lib/postgresql/data/
     ports:

@@ -5,7 +5,7 @@ import (
 	"net/url"
 )
 
-// Config структура для параметров соединения с БД
+// Config структура для параметров соединения с БД.
 type Config struct {
 	Host         string `yaml:"host" env:"DB_HOST" env-required:"true"`
 	Port         int    `yaml:"port" env:"DB_PORT" env-default:"1433" env-description:"sql server port"`
@@ -14,10 +14,11 @@ type Config struct {
 	Database     string `yaml:"database" env:"DB_DATABASE" env-required:"true"`
 	TimeoutQuery int    `yaml:"timeout_query" env:"TIMEOUT_QUERY" env-default:"300"` // Second
 	APPName      string `yaml:"app_name" env:"APP_NAME"`
-	DriverName   string `yaml:"driver_name" env:"DRIVER_NAME"  env-default:"sqlserver"`
+	DriverName   string `yaml:"driver_name" env:"DRIVER_NAME" env-default:"sqlserver"`
+	DSN          string `yaml:"dsn" env:"DB_DSN"`
 }
 
-// NewConfig создание конфига по умолчанию
+// NewConfig создание конфига по умолчанию.
 func NewConfig(driverName string) *Config {
 	c := &Config{Host: "127.0.0.1",
 		TimeoutQuery: 300,
@@ -41,27 +42,33 @@ func NewConfig(driverName string) *Config {
 	return c
 }
 
-// WithPassword установка пароля
+// WithPassword установка пароля.
 func (c *Config) WithPassword(pwd string) *Config {
 	c.Password = pwd
 	return c
 }
 
-// WithDriverName задания наименования драйвера БД
+// WithDriverName задания наименования драйвера БД.
 func (c *Config) WithDriverName(driverName string) *Config {
 	c.DriverName = driverName
 	return c
 }
 
-// WithPort установка порта БД
+// WithPort установка порта БД.
 func (c *Config) WithPort(port int) *Config {
 	c.Port = port
 	return c
 }
 
-// WithDB установка БД
+// WithDB установка БД.
 func (c *Config) WithDB(dbname string) *Config {
 	c.Database = dbname
+	return c
+}
+
+// WithDSN установка строки подключения к БД.
+func (c *Config) WithDSN(dsn string) *Config {
+	c.DSN = dsn
 	return c
 }
 
@@ -89,8 +96,10 @@ func (c *Config) GetDatabaseURL() string {
 		if c.APPName != "" {
 			v.Add("app name", c.APPName)
 		}
-
-		if c.DriverName == "postgres" {
+		switch c.DriverName {
+		case "sqlserver":
+			v.Set("encrypt", "disable")
+		case "postgres":
 			v.Set("sslmode", "disable")
 		}
 		var u = url.URL{

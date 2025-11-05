@@ -3,16 +3,16 @@
 Добавлены методы:
 
 ```golang
-Exec(query string, args ...interface{}) (int64, error)
-NamedExec(query string, arg interface{}) (int64, error)
-Select(dest interface{}, query string, args ...interface{}) error
-NamedSelect(dest interface{}, query string, arg interface{}) error
-SelectMaps(query string, args ...interface{}) (ret []map[string]interface{}, err error)
-NamedSelectMaps(query string, arg interface{}) (ret []map[string]interface{}, err error)
-Get(dest interface{}, query string, args ...interface{}) error
-NamedGet(dest interface{}, query string, arg interface{}) error
-GetMap(query string, args ...interface{}) (ret map[string]interface{}, err error)
-NamedGetMap(query string, arg interface{}) (ret map[string]interface{}, err error)
+ExecContext(ctx context.Context, query string, args ...any) (int64, error)
+NamedExecContext(ctx context.Context,query string, arg any) (int64, error)
+SelectContext(ctx context.Context,dest any, query string, args ...any) error
+NamedSelectContext(ctx context.Context,dest any, query string, arg any) error
+SelectMapsContext(ctx context.Context,query string, args ...any) (ret []map[string]any, err error)
+NamedSelectMapsContext(ctx context.Context,query string, arg any) (ret []map[string]any, err error)
+GetContext(ctx context.Context,dest any, query string, args ...any) error
+NamedGetContext(ctx context.Context,dest any, query string, arg iany) error
+GetMapContext(ctx context.Context,query string, args ...any) (ret map[string]any, err error)
+NamedGetMapContext(ctx context.Context,query string, arg any) (ret map[string]any, err error)
 ```
 
 Протестировано для MSSQL, PostgreSQL, MySQL, SQLite
@@ -30,10 +30,12 @@ NamedGetMap(query string, arg interface{}) (ret map[string]interface{}, err erro
     }
     log.Println("cfg.DB", config.String())
 
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
     query := fmt.Sprintf(`select last_name, email, created_at from %s where last_name=:Name`, tableName)
     person := Person{}
-    err = db.NamedGet(&person, query, map[string]interface{}{"Name": "Иванов"})
+    err = db.NamedGetContext(ctx, &person, query, map[string]any{"Name": "Иванов"})
 ```
 
 
@@ -54,5 +56,3 @@ NamedGetMap(query string, arg interface{}) (ret map[string]interface{}, err erro
 Для SQLite:
 
 >go get github.com/mattn/go-sqlite3
-
-

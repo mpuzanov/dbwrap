@@ -26,7 +26,7 @@ func NewConnect(cfg *Config) (*DBSQL, error) {
 	dsn := cfg.GetDatabaseURL()
 	db, err := sqlx.Connect(cfg.DriverName, dsn)
 	if err != nil {
-		return nil, fmt.Errorf(" sqlx.Connect : %w", err)
+		return nil, fmt.Errorf("sqlx.Connect driver %s dsn %s: %w", cfg.DriverName, dsn, err)
 	}
 	return &DBSQL{DBX: db, Cfg: cfg}, nil
 }
