@@ -7,15 +7,16 @@ import (
 
 // Config структура для параметров соединения с БД.
 type Config struct {
-	Host         string `yaml:"host" env:"DB_HOST" env-required:"true"`
-	Port         int    `yaml:"port" env:"DB_PORT" env-default:"1433" env-description:"sql server port"`
-	User         string `yaml:"user" env:"DB_USER" env-required:"true"`
-	Password     string `yaml:"password" env:"DB_PASSWORD" env-required:"true"`
-	Database     string `yaml:"database" env:"DB_DATABASE" env-required:"true"`
-	TimeoutQuery int    `yaml:"timeout_query" env:"TIMEOUT_QUERY" env-default:"300"` // Second
-	APPName      string `yaml:"app_name" env:"APP_NAME"`
-	DriverName   string `yaml:"driver_name" env:"DRIVER_NAME" env-default:"sqlserver"`
-	DSN          string `yaml:"dsn" env:"DB_DSN"`
+	DriverName   string `json:"driver_name" yaml:"driver_name" env:"DRIVER_NAME" env-default:"sqlserver"`
+	Host         string `json:"host" yaml:"host" env:"DB_HOST"`
+	Port         int    `json:"port" yaml:"port" env:"DB_PORT" env-default:"1433" env-description:"sql server port"`
+	User         string `json:"user" yaml:"user" env:"DB_USER"`
+	Password     string `json:"password" yaml:"password" env:"DB_PASSWORD"`
+	Database     string `json:"database" yaml:"database" env:"DB_DATABASE"`
+	APPName      string `json:"app_name" yaml:"app_name" env:"APP_NAME"`
+	DSN          string `json:"dsn" yaml:"dsn" env:"DB_DSN"`
+	Encrypt      string `json:"encrypt" yaml:"encrypt" env:"DB_ENCRYPT"`
+	TimeoutQuery int    `json:"timeout_query" yaml:"timeout_query" env:"TIMEOUT_QUERY" env-default:"300"` // Second
 }
 
 // NewConfig создание конфига по умолчанию.
@@ -79,17 +80,18 @@ func (c *Config) WithDSN(dsn string) *Config {
 // sqlite3 или имя БД или :memory:
 // driver sqlserver || postgres
 func (c *Config) GetDatabaseURL() string {
-	switch c.DriverName {
+	if c.DSN != "" {
+		return c.DSN
+	}
 
+	switch c.DriverName {
 	case "sqlite3":
 		if c.Database != "" {
 			return c.Database
 		}
 		return ":memory:"
-
 	case "mysql":
 		return fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8mb4,utf8&parseTime=true&loc=Local", c.User, c.Password, c.Host, c.Database)
-
 	default:
 		v := url.Values{}
 		v.Set("database", c.Database)
@@ -98,7 +100,9 @@ func (c *Config) GetDatabaseURL() string {
 		}
 		switch c.DriverName {
 		case "sqlserver":
-			v.Set("encrypt", "disable")
+			if c.Encrypt != "" {
+				v.Set("encrypt", c.Encrypt)
+			}
 		case "postgres":
 			v.Set("sslmode", "disable")
 		}
