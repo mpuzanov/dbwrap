@@ -26,7 +26,7 @@ func namedQuery(query string, arg any) (nq string, args []any, err error) {
 func (d *DBSQL) ExecContext(ctx context.Context, query string, args ...any) (int64, error) {
 
 	// ограничим время выполнения запроса по умолчанию
-	dur := time.Duration(d.Cfg.TimeoutQuery) * time.Second
+	dur := time.Duration(d.timeoutQuery) * time.Second
 	ctx, cancel := context.WithTimeout(ctx, dur)
 	defer cancel()
 
@@ -60,7 +60,7 @@ func (d *DBSQL) NamedExecContext(ctx context.Context, query string, arg any) (in
 func (d *DBSQL) SelectContext(ctx context.Context, dest any, query string, args ...any) error {
 
 	// ограничим время выполнения запроса по умолчанию
-	dur := time.Duration(d.Cfg.TimeoutQuery) * time.Second
+	dur := time.Duration(d.timeoutQuery) * time.Second
 	ctx, cancel := context.WithTimeout(ctx, dur)
 	defer cancel()
 
@@ -89,7 +89,7 @@ func (d *DBSQL) NamedSelectContext(ctx context.Context, dest any, query string, 
 // SelectMapsContext ...
 func (d *DBSQL) SelectMapsContext(ctx context.Context, query string, args ...any) (ret []map[string]any, err error) {
 
-	dur := time.Duration(d.Cfg.TimeoutQuery) * time.Second
+	dur := time.Duration(d.timeoutQuery) * time.Second
 	ctx, cancel := context.WithTimeout(ctx, dur)
 	defer cancel()
 
@@ -158,7 +158,7 @@ func (d *DBSQL) NamedSelectMapsContext(ctx context.Context, query string, arg an
 func (d *DBSQL) GetContext(ctx context.Context, dest any, query string, args ...any) error {
 
 	// ограничим время выполнения запроса по умолчанию
-	dur := time.Duration(d.Cfg.TimeoutQuery) * time.Second
+	dur := time.Duration(d.timeoutQuery) * time.Second
 	ctx, cancel := context.WithTimeout(ctx, dur)
 	defer cancel()
 
@@ -182,7 +182,7 @@ func (d *DBSQL) NamedGetContext(ctx context.Context, dest any, query string, arg
 // GetMapContext ...
 func (d *DBSQL) GetMapContext(ctx context.Context, query string, args ...any) (ret map[string]any, err error) {
 	// ограничим время выполнения запроса по умолчанию
-	dur := time.Duration(d.Cfg.TimeoutQuery) * time.Second
+	dur := time.Duration(d.timeoutQuery) * time.Second
 	ctx, cancel := context.WithTimeout(ctx, dur)
 	defer cancel()
 

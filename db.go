@@ -10,8 +10,8 @@ import (
 
 // DBSQL ...
 type DBSQL struct {
-	DBX *sqlx.DB
-	Cfg *Config
+	DBX          *sqlx.DB
+	timeoutQuery int // Second
 }
 
 // ErrBadConfigDB ошибка.
@@ -19,7 +19,6 @@ var ErrBadConfigDB = errors.New("не заполнены параметры по
 
 // NewConnect Создание подключения к БД.
 func NewConnect(cfg *Config) (*DBSQL, error) {
-
 	if cfg.DriverName != "sqlite3" && cfg.DSN == "" {
 		if cfg.Host == "" || cfg.Database == "" || cfg.User == "" {
 			return nil, ErrBadConfigDB
@@ -30,7 +29,20 @@ func NewConnect(cfg *Config) (*DBSQL, error) {
 	if err != nil {
 		return nil, fmt.Errorf("sqlx.Connect driver %s dsn %s: %w", cfg.DriverName, dsn, err)
 	}
-	return &DBSQL{DBX: db, Cfg: cfg}, nil
+	return &DBSQL{DBX: db, timeoutQuery: cfg.TimeoutQuery}, nil
+}
+
+// NewConnect Создание подключения к БД.
+func NewConnectDSN(driver, dsn string) (*DBSQL, error) {
+	if driver == "" || dsn == "" {
+		return nil, ErrBadConfigDB
+	}
+
+	db, err := sqlx.Connect(driver, dsn)
+	if err != nil {
+		return nil, fmt.Errorf("sqlx.Connect driver %s, dsn %s: %w", driver, dsn, err)
+	}
+	return &DBSQL{DBX: db, timeoutQuery: 600}, nil
 }
 
 // Close закрытие соединений.
@@ -39,6 +51,11 @@ func (d *DBSQL) Close() error {
 }
 
 // SetTimeout установка таймаута для выполнения запроса в секундах.
-func (d *DBSQL) SetTimeout(timeout uint) {
-	d.Cfg.TimeoutQuery = int(timeout)
+func (d *DBSQL) SetTimeoutQuery(timeout uint) {
+	d.timeoutQuery = int(timeout)
+}
+
+// Timeout получение текущего таймаута для выполнения запроса в секундах.
+func (d *DBSQL) TimeoutQuery() int {
+	return d.timeoutQuery
 }

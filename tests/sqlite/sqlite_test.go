@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-// Person человек
+// Person человек.
 type Person struct {
 	LastName    string     `db:"last_name"`
 	Birthdate   *time.Time `db:"birthdate"`
@@ -30,7 +30,7 @@ type User struct {
 	Email string `db:"email"`
 }
 
-// DBSuite структура для набора тестов с БД
+// DBSuite структура для набора тестов с БД.
 type TestDBSuite struct {
 	suite.Suite
 	db  *dbwrap.DBSQL

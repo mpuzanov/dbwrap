@@ -53,8 +53,8 @@ func TestDBNewConnect(t *testing.T) {
 	db, err := dbwrap.NewConnect(config)
 	assert.NoError(t, err)
 
-	db.SetTimeout(100)
-	assert.Equal(t, 100, db.Cfg.TimeoutQuery)
+	db.SetTimeoutQuery(100)
+	assert.Equal(t, 100, db.TimeoutQuery())
 }
 
 func TestTestDBSuite(t *testing.T) {
@@ -62,7 +62,6 @@ func TestTestDBSuite(t *testing.T) {
 }
 
 func (ts *TestDBSuite) SetupSuite() {
-
 	config := dbwrap.NewConfig("sqlserver").WithPassword(password).WithDB("master").WithPort(port)
 	db, err := dbwrap.NewConnect(config)
 	if err != nil {
@@ -122,7 +121,6 @@ func tearDownDatabase(ts *TestDBSuite) {
 }
 
 func (ts *TestDBSuite) TestData1() {
-
 	dataInsert := map[string]any{
 		"LastName": "Иванов",
 		"Email":    "ivan@example.com",
@@ -213,7 +211,6 @@ func (ts *TestDBSuite) TestData1() {
 }
 
 func (ts *TestDBSuite) TestDataSelect() {
-
 	// batch insert with maps
 	dtIns := []map[string]any{
 		{"LastName": "Сидоров", "Email": "sidr@example.com", "Birthdate": time.Date(2000, 2, 21, 0, 0, 0, 0, time.UTC)},

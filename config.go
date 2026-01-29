@@ -7,16 +7,16 @@ import (
 
 // Config структура для параметров соединения с БД.
 type Config struct {
-	DriverName   string `json:"driver_name" yaml:"driver_name" env:"DRIVER_NAME" env-default:"sqlserver"`
+	DriverName   string `json:"driver_name" yaml:"driver_name" env:"DB_DRIVER_NAME" env-default:"sqlserver" envDefault:"sqlserver"`
 	Host         string `json:"host" yaml:"host" env:"DB_HOST"`
-	Port         int    `json:"port" yaml:"port" env:"DB_PORT" env-default:"1433" env-description:"sql server port"`
+	Port         int    `json:"port" yaml:"port" env:"DB_PORT" env-default:"1433" envDefault:"1433" env-description:"sql server port"`
 	User         string `json:"user" yaml:"user" env:"DB_USER"`
 	Password     string `json:"password" yaml:"password" env:"DB_PASSWORD"`
 	Database     string `json:"database" yaml:"database" env:"DB_DATABASE"`
 	APPName      string `json:"app_name" yaml:"app_name" env:"APP_NAME"`
 	DSN          string `json:"dsn" yaml:"dsn" env:"DB_DSN"`
 	Encrypt      string `json:"encrypt" yaml:"encrypt" env:"DB_ENCRYPT"`
-	TimeoutQuery int    `json:"timeout_query" yaml:"timeout_query" env:"TIMEOUT_QUERY" env-default:"300"` // Second
+	TimeoutQuery int    `json:"timeout_query" yaml:"timeout_query" env:"TIMEOUT_QUERY" env-default:"300" envDefault:"300"` // Second
 }
 
 // NewConfig создание конфига по умолчанию.
